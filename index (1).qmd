@@ -1,0 +1,750 @@
+---
+title: "FRECUENCIAS, TABLAS Y GRAFICAS"
+subtitle: "TALLER_1"
+author:
+  - name: Alejandro Patiño<br>Sebastian Osorio<br>Mariana Martinez<br>Diana Florez
+    affiliation: "Escuela Superior de Administración Pública"
+    affiliation-url: "https://www.esap.edu.co/"
+date: today
+lang: es
+title-block-banner: "#98b6ed"
+
+format:
+  html:
+    page-layout: full
+    fontsize: 14pt
+    toc: true
+    toc-location: right
+    number-sections: true
+    code-fold: true
+    code-summary: "Ver código"
+    theme: dark
+    highlight-style: monokai
+    html-math-method: katex
+    smooth-scroll: true
+    link-external-newwindow: true
+    code-overflow: scroll
+    favicon: favicon.ico
+
+editor: visual
+
+knitr:
+  opts_chunk:
+    message: false
+    warning: false
+    fig.align: center
+    fig.width: 6
+    fig.height: 5
+    out.width: "70%"
+---
+
+::: {style="position:absolute; top:10px; right:10px;"}
+![](Logo_esap.png){width="200"}
+:::
+
+# Cargar paquetes
+
+```{r}
+#| label: paquetes
+# Si algún paquete no está instalado, ejecute una sola vez en la consola:
+# install.packages(c("readxl", "ggplot2", "knitr"))
+
+library(readxl)    # leer archivos Excel
+library(ggplot2)   # gráficos
+library(knitr)     # tablas con kable()
+
+options(knitr.kable.NA = "")   # las celdas vacías no muestran "NA"
+```
+
+# .Introducción
+
+## Distribución de frecuencias
+
+Una **distribución de frecuencias** es una tabla que organiza los datos de una variable, indicando cuántas veces se presenta cada valor, categoría o intervalo. Resume la información y permite identificar patrones antes de calcular medidas estadísticas o construir gráficos.
+
+Sea $X$ una variable con $k$ valores, categorías o clases distintas, denotados $x_1, x_2, \dots, x_k$, y sea $n$ el número total de observaciones.
+
+## Tipos de frecuencias
+
+**Frecuencia absoluta** ($f_i$)
+
+Es el número de veces que se repite el valor o categoría $x_i$.
+
+$$
+f_i = \text{número de observaciones iguales a } x_i
+$$
+
+**Propiedades:**
+
+$$
+0 \le f_i \le n \qquad \text{y} \qquad \sum_{i=1}^{k} f_i = n
+$$
+
+**Frecuencia absoluta acumulada** ($F_i$)
+
+Es la suma de las frecuencias absolutas de todos los valores menores o iguales a $x_i$.
+
+$$
+F_i = f_1 + f_2 + \dots + f_i = \sum_{j=1}^{i} f_j
+$$
+
+También puede calcularse de forma recursiva:
+
+$$
+F_1 = f_1, \qquad F_i = F_{i-1} + f_i \quad (i = 2, \dots, k)
+$$
+
+**Propiedades:**
+
+$$
+F_1 = f_1, \qquad F_k = n, \qquad F_i \le F_{i+1}
+$$
+
+**Frecuencia relativa** ($h_i$)
+
+Es la proporción de observaciones que corresponden a $x_i$ respecto al total.
+
+$$
+h_i = \frac{f_i}{n}
+$$
+
+**Propiedades:**
+
+$$
+0 \le h_i \le 1 \qquad \text{y} \qquad \sum_{i=1}^{k} h_i = 1
+$$
+
+**Frecuencia relativa acumulada** ($H_i$)
+
+Es la proporción de observaciones menores o iguales a $x_i$.
+
+$$
+H_i = h_1 + h_2 + \dots + h_i = \sum_{j=1}^{i} h_j = \frac{F_i}{n}
+$$
+
+**Propiedades:**
+
+$$
+H_k = 1, \qquad H_i \le H_{i+1}
+$$
+
+**Frecuencia porcentual (**$p_i$**) y porcentual acumulada** ($P_i$)
+
+Expresan las frecuencias relativas en porcentaje.
+
+$$
+p_i = h_i \times 100 = \frac{f_i}{n} \times 100
+$$
+
+$$
+P_i = H_i \times 100 = \frac{F_i}{n} \times 100
+$$
+
+con $\sum_{i=1}^{k} p_i = 100\%$ y $P_k = 100\%$.
+
+**Frecuencia acumulada descendente ("o más")**
+
+Cuando interesa saber cuántas observaciones son **mayores o iguales** a $x_i$:
+
+$$
+F_i^{\downarrow} = \sum_{j=i}^{k} f_j = n - F_{i-1}, \qquad H_i^{\downarrow} = \frac{F_i^{\downarrow}}{n}
+$$
+
+**Resumen**
+
+| Frecuencia | Símbolo | Fórmula | Interpretación |
+|:-----------------|:----------------:|:----------------:|:-----------------|
+| Absoluta | $f_i$ | conteo | Veces que aparece $x_i$ |
+| Absoluta acumulada | $F_i$ | $\displaystyle\sum_{j=1}^{i} f_j$ | Observaciones $\le x_i$ |
+| Relativa | $h_i$ | $\dfrac{f_i}{n}$ | Proporción de $x_i$ |
+| Relativa acumulada | $H_i$ | $\dfrac{F_i}{n}$ | Proporción $\le x_i$ |
+| Porcentual | $p_i$ | $h_i \times 100$ | Porcentaje de $x_i$ |
+| Porcentual acumulada | $P_i$ | $H_i \times 100$ | Porcentaje $\le x_i$ |
+
+::: callout-note
+**¿Cuándo tiene sentido acumular?** Las frecuencias acumuladas requieren que los valores tengan un **orden**. Por eso se calculan para variables ordinales, discretas y continuas, pero **no** para variables nominales como *Sector Laboral*, donde el orden de las categorías es arbitrario.
+:::
+
+## Distribución según el tipo de variable
+
+| Tipo | Variables del estudio | Cómo se construye la tabla |
+|:-------------------|:-------------------------|:-------------------------|
+| Cualitativa nominal | SECTOR | Una fila por categoría, sin acumuladas |
+| Cualitativa ordinal | INGRESOS, SERVICIO, FRECUENCIA | Una fila por categoría, en orden, con acumuladas |
+| Cuantitativa discreta | HIJOS, AÑOS | Una fila por valor (o por intervalo si hay muchos valores) |
+| Cuantitativa continua | SALARIO, SATISFACCION, EDAD, PARTICIPACION | Datos agrupados en intervalos |
+
+Para los **gráficos circulares**, el ángulo de cada sector es:
+
+$$
+\alpha_i = h_i \times 360^\circ
+$$
+
+### Datos agrupados en intervalos (variables continuas)
+
+**1. Rango:**
+
+$$
+R = X_{\max} - X_{\min}
+$$
+
+**2. Número de clases (**$k$), por la regla de Sturges:
+
+$$
+k = 1 + 3{,}322 \, \log_{10}(n)
+$$
+
+**3. Amplitud de clase (**$C$):
+
+$$
+C = \frac{R}{k}
+$$
+
+redondeada hacia arriba con los decimales de los datos, para que los intervalos cubran todo el rango.
+
+**4. Límites de clase:**
+
+$$
+[L_i,\; L_i + C) \qquad \text{con } L_1 = X_{\min} \text{ y } L_{i+1} = L_i + C
+$$
+
+El último intervalo se cierra en ambos extremos.
+
+**5. Marca de clase:**
+
+$$
+x_i = \frac{L_i + L_{i+1}}{2}
+$$
+
+**6. Densidad de frecuencia** (útil cuando las amplitudes no son iguales):
+
+$$
+d_i = \frac{f_i}{C_i}
+$$
+
+### Percentiles con datos agrupados
+
+$$
+P_r = L_i + C \left( \frac{\dfrac{r\,n}{100} - F_{i-1}}{f_i} \right)
+$$
+
+donde $L_i$ es el límite inferior de la clase que contiene al percentil, $F_{i-1}$ la frecuencia acumulada de la clase anterior, $f_i$ la frecuencia de esa clase y $C$ su amplitud. La mediana corresponde a $r = 50$.
+
+### Gráficos según la frecuencia
+
+| Gráfico | Frecuencia usada | Tipo de variable |
+|:---|:---|:---|
+| Barras | $f_i$ o $h_i$ | Cualitativa y discreta |
+| Circular | $h_i$ con $\alpha_i = h_i \times 360^\circ$ | Cualitativa |
+| Histograma | $f_i$ por intervalo | Continua |
+| Polígono de frecuencias | $f_i$ vs. marca de clase $x_i$ | Continua |
+| Ojiva | $F_i$ vs. límite superior | Ordinal o continua |
+
+# .Bajar el Dataset
+
+El archivo del sector (por ejemplo `sector (2).xlsx`) se guarda en la carpeta `DATOS` del proyecto, junto a este documento `index.qmd`. El código lo busca por su nombre dentro del proyecto, así que no importa si el nombre tiene espacios o guiones bajos.
+
+```{r}
+#| label: bajar-dataset
+# Busca el archivo del sector en el proyecto (en DATOS o en la misma carpeta),
+# sin importar si se llama "sector (2).xlsx", "sector_2_.xlsx" o "DATOSsector_2_.xlsx".
+buscar_excel <- function(patron) {
+  hallados <- list.files(".", pattern = patron, recursive = TRUE,
+                         full.names = TRUE, ignore.case = TRUE)
+  hallados <- hallados[!grepl("~\\$", hallados)]   # ignora temporales de Excel
+  if (length(hallados) == 0) {
+    stop("No se encontró un archivo que coincida con '", patron,
+         "'. Cópielo a la carpeta del proyecto (junto a index.qmd o en DATOS).\n",
+         "Carpeta de trabajo actual: ", getwd(), call. = FALSE)
+  }
+  hallados[1]
+}
+
+archivo <- buscar_excel("sector.*\\.xlsx$")
+archivo
+
+# Si el archivo estuviera en internet, se descargaría así (cambie la URL):
+# url <- "https://sitio.com/sector.xlsx"
+# download.file(url, destfile = archivo, mode = "wb")
+
+file.exists(archivo)   # TRUE significa que R encontró el archivo
+```
+
+# .Leer el Dataset
+
+```{r}
+#| label: leer-dataset
+sector_2_ <- read_excel(archivo)
+
+# El encabezado de la primera columna puede traer un espacio al final ("SECTOR "),
+# así que se limpian los nombres de todas las columnas.
+names(sector_2_) <- trimws(names(sector_2_))
+```
+
+# .Conocer el Dataset
+
+**Nombres de las variables**
+
+```{r}
+#| label: nombres
+names(sector_2_)
+```
+
+**Estructura de las variables**
+
+```{r}
+#| label: estructura
+str(sector_2_)
+```
+
+**Mostrar algunas filas del dataset**
+
+```{r}
+#| label: head
+head(sector_2_)
+```
+
+**Declarar las variables cualitativas con su orden**
+
+Las variables ordinales se declaran como factores ordenados, con las categorías de menor a mayor, para que las tablas salgan en el orden correcto y las acumuladas tengan sentido.
+
+```{r}
+#| label: factores
+sector_2_$SECTOR   <- factor(sector_2_$SECTOR)
+
+sector_2_$INGRESOS <- factor(sector_2_$INGRESOS,
+                             levels = c("Baja", "Media", "Alta"),
+                             ordered = TRUE)
+
+sector_2_$SERVICIO <- factor(sector_2_$SERVICIO,
+                             levels = c("Muy Insatisfecho", "Insatisfecho",
+                                        "Neutral", "Satisfecho", "Muy Satisfecho"),
+                             ordered = TRUE)
+
+sector_2_$FRECUENCIA <- factor(sector_2_$FRECUENCIA,
+                               levels = c("Nunca", "Rara vez", "A veces",
+                                          "Frecuentemente", "Siempre"),
+                               ordered = TRUE)
+```
+
+**Resumen general**
+
+```{r}
+#| label: resumen
+summary(sector_2_)
+```
+
+El dataset tiene **`r nrow(sector_2_)` observaciones** y **`r ncol(sector_2_)` variables**.
+
+# .Tablas y Graficas
+
+## Funciones para construir las tablas
+
+Se definen una sola vez y se usan en todas las variables.
+
+```{r}
+#| label: funciones
+# Tabla para variables cualitativas y discretas (un valor por fila)
+tabla_frec <- function(x, acumular = TRUE) {
+  tb <- table(x)
+  f  <- as.vector(tb)
+  n  <- sum(f)
+  out <- data.frame(Categoria = names(tb), fi = f, stringsAsFactors = FALSE)
+  if (acumular) out$Fi <- cumsum(f)
+  out$hi <- round(f / n, 4)
+  if (acumular) out$Hi <- round(cumsum(f) / n, 4)
+  out$pct <- round(100 * f / n, 2)
+  if (acumular) out$Pct <- round(100 * cumsum(f) / n, 2)
+  total <- out[1, ]
+  total[1, ] <- NA
+  total$Categoria <- "Total"
+  total$fi  <- n
+  total$hi  <- 1
+  total$pct <- 100
+  rbind(out, total)
+}
+
+mostrar <- function(tb, primera = "Categoría") {
+  nom <- if (ncol(tb) == 7) {
+    c(primera, "fi", "Fi", "hi", "Hi", "pi (%)", "Pi (%)")
+  } else {
+    c(primera, "fi", "hi", "pi (%)")
+  }
+  kable(tb, col.names = nom, align = c("l", rep("r", ncol(tb) - 1)))
+}
+
+# Tabla para variables continuas (datos agrupados en intervalos)
+tabla_cont <- function(x, k = NULL, dec = 0) {
+  n <- length(x)
+  if (is.null(k)) k <- round(1 + 3.322 * log10(n))        # Sturges
+  R <- max(x) - min(x)                                     # rango
+  C <- ceiling(round(R / k * 10^dec, 6)) / 10^dec          # amplitud
+  k_real <- ceiling(round(R / C, 6))                       # clases necesarias
+  L <- round(min(x) + C * (0:k_real), dec + 3)             # límites
+  lo <- L[-length(L)]
+  hi <- L[-1]
+  etiqueta <- paste0("[", formatC(lo, format = "f", digits = dec), " - ",
+                     formatC(hi, format = "f", digits = dec), ")")
+  etiqueta[k_real] <- sub(")$", "]", etiqueta[k_real])
+  grupo <- cut(x, breaks = L, right = FALSE, include.lowest = TRUE,
+               labels = etiqueta)
+  f <- as.vector(table(grupo))
+  out <- data.frame(
+    Intervalo = etiqueta,
+    xi  = round((lo + hi) / 2, dec + 1),
+    fi  = f,
+    Fi  = cumsum(f),
+    hi  = round(f / n, 4),
+    Hi  = round(cumsum(f) / n, 4),
+    pct = round(100 * f / n, 2),
+    Pct = round(100 * cumsum(f) / n, 2),
+    stringsAsFactors = FALSE
+  )
+  total <- data.frame(Intervalo = "Total", xi = NA, fi = n, Fi = NA,
+                      hi = 1, Hi = NA, pct = 100, Pct = NA)
+  list(tabla = rbind(out, total), n = n, R = R, k = k, C = C,
+       k_real = k_real, L = L, dec = dec)
+}
+
+mostrar_cont <- function(res) {
+  kable(res$tabla,
+        col.names = c("Intervalo", "xi", "fi", "Fi", "hi", "Hi", "pi (%)", "Pi (%)"),
+        align = c("l", rep("r", 7)))
+}
+
+# Gráficos
+color <- "#98b6ed"
+
+graf_barras <- function(x, titulo, xlab = "") {
+  df <- as.data.frame(table(x))
+  names(df) <- c("Categoria", "fi")
+  ggplot(df, aes(x = Categoria, y = fi)) +
+    geom_col(fill = color, color = "white") +
+    geom_text(aes(label = fi), vjust = -0.4) +
+    labs(title = titulo, x = xlab, y = "Frecuencia absoluta (fi)") +
+    theme_minimal(base_size = 12)
+}
+
+graf_circular <- function(x, titulo) {
+  df <- as.data.frame(table(x))
+  names(df) <- c("Categoria", "fi")
+  df$etiqueta <- paste0(round(100 * df$fi / sum(df$fi), 1), "%")
+  ggplot(df, aes(x = "", y = fi, fill = Categoria)) +
+    geom_col(width = 1, color = "white") +
+    coord_polar(theta = "y") +
+    geom_text(aes(label = etiqueta), position = position_stack(vjust = 0.5)) +
+    labs(title = titulo, fill = "") +
+    theme_void(base_size = 12)
+}
+
+graf_hist <- function(x, res, titulo, xlab) {
+  lo   <- res$L[-length(res$L)]
+  mids <- (lo + res$L[-1]) / 2
+  f    <- res$tabla$fi[-nrow(res$tabla)]
+  ggplot(data.frame(m = mids, f = f), aes(x = m, y = f)) +
+    geom_col(width = res$C, fill = color, color = "white") +
+    labs(title = titulo, x = xlab, y = "Frecuencia absoluta (fi)") +
+    theme_minimal(base_size = 12)
+}
+
+graf_ojiva <- function(res, titulo, xlab) {
+  f <- res$tabla$fi[-nrow(res$tabla)]
+  df <- data.frame(limite = res$L, Fi = c(0, cumsum(f)))
+  ggplot(df, aes(x = limite, y = Fi)) +
+    geom_line(color = color, linewidth = 1) +
+    geom_point(color = color, size = 2) +
+    labs(title = titulo, x = xlab, y = "Frecuencia acumulada (Fi)") +
+    theme_minimal(base_size = 12)
+}
+
+# Texto con rango, k, C (se imprime con results: asis)
+info_cont <- function(res) {
+  cat(sprintf(
+    "$n = %d$, $R = %s$, $k = 1 + 3{,}322\\log_{10}(%d) \\approx %d$, $C = %s$ (se usan %d intervalos).\n",
+    res$n, format(res$R), res$n, res$k, format(res$C), res$k_real))
+}
+```
+
+## Variable cualitativa nominal
+
+### SECTOR
+
+Como es nominal, **no se calculan frecuencias acumuladas**.
+
+```{r}
+#| label: tabla-sector
+mostrar(tabla_frec(sector_2_$SECTOR, acumular = FALSE), primera = "Sector")
+```
+
+El sector con más personas es **`r names(which.max(table(sector_2_$SECTOR)))`**, con `r max(table(sector_2_$SECTOR))` encuestados (`r round(100 * max(table(sector_2_$SECTOR)) / nrow(sector_2_), 1)` %).
+
+Ángulo de cada sector en el gráfico circular, $\alpha_i = h_i \times 360^\circ$:
+
+```{r}
+#| label: angulos-sector
+ang <- round(360 * prop.table(table(sector_2_$SECTOR)), 1)
+kable(data.frame(Sector = names(ang), Angulo = as.vector(ang)),
+      col.names = c("Sector", "Ángulo (°)"), align = c("l", "r"))
+```
+
+```{r}
+#| label: graf-sector
+graf_barras(sector_2_$SECTOR, "Personas por sector laboral", "Sector")
+graf_circular(sector_2_$SECTOR, "Distribución por sector laboral")
+```
+
+## Variables cualitativas ordinales
+
+### INGRESOS
+
+```{r}
+#| label: tabla-ingresos
+mostrar(tabla_frec(sector_2_$INGRESOS), primera = "Nivel de ingresos")
+```
+
+```{r}
+#| label: graf-ingresos
+graf_barras(sector_2_$INGRESOS, "Nivel de ingresos", "Nivel de ingresos")
+```
+
+### SERVICIO (satisfacción con el servicio)
+
+```{r}
+#| label: tabla-servicio
+mostrar(tabla_frec(sector_2_$SERVICIO), primera = "Satisfacción con el servicio")
+```
+
+El **`r round(100 * sum(sector_2_$SERVICIO <= "Neutral") / nrow(sector_2_), 1)` %** de los encuestados está en nivel *Neutral* o por debajo (frecuencia porcentual acumulada $P_3$).
+
+```{r}
+#| label: graf-servicio
+#| fig.width: 7
+graf_barras(sector_2_$SERVICIO, "Satisfacción con el servicio", "Nivel de satisfacción")
+```
+
+### FRECUENCIA (participación)
+
+```{r}
+#| label: tabla-frecuencia
+mostrar(tabla_frec(sector_2_$FRECUENCIA), primera = "Frecuencia de participación")
+```
+
+```{r}
+#| label: graf-frecuencia
+#| fig.width: 7
+graf_barras(sector_2_$FRECUENCIA, "Frecuencia de participación", "Frecuencia")
+```
+
+## Variables cuantitativas discretas
+
+### HIJOS
+
+Toma pocos valores (1 a 5), así que cada valor es una fila.
+
+```{r}
+#| label: tabla-hijos
+mostrar(tabla_frec(sector_2_$HIJOS), primera = "Número de hijos (xi)")
+```
+
+```{r}
+#| label: graf-hijos
+graf_barras(sector_2_$HIJOS, "Número de hijos", "Hijos")
+```
+
+### AÑOS de experiencia
+
+Toma valores de 0 a 20, por eso se agrupan en intervalos.
+
+```{r}
+#| label: tabla-anios
+#| results: asis
+res_anios <- tabla_cont(sector_2_[["AÑOS"]], dec = 0)
+info_cont(res_anios)
+```
+
+```{r}
+#| label: tabla-anios2
+mostrar_cont(res_anios)
+```
+
+```{r}
+#| label: graf-anios
+graf_hist(sector_2_[["AÑOS"]], res_anios, "Años de experiencia", "Años")
+graf_ojiva(res_anios, "Ojiva: años de experiencia", "Años")
+```
+
+## Variables cuantitativas continuas
+
+### EDAD
+
+```{r}
+#| label: tabla-edad
+#| results: asis
+res_edad <- tabla_cont(sector_2_$EDAD, dec = 0)
+info_cont(res_edad)
+```
+
+```{r}
+#| label: tabla-edad2
+mostrar_cont(res_edad)
+```
+
+```{r}
+#| label: graf-edad
+graf_hist(sector_2_$EDAD, res_edad, "Histograma de la edad", "Edad (años)")
+graf_ojiva(res_edad, "Ojiva de la edad", "Edad (años)")
+```
+
+### SALARIO (miles de pesos)
+
+```{r}
+#| label: tabla-salario
+#| results: asis
+res_sal <- tabla_cont(sector_2_$SALARIO, dec = 0)
+info_cont(res_sal)
+```
+
+```{r}
+#| label: tabla-salario2
+mostrar_cont(res_sal)
+```
+
+```{r}
+#| label: graf-salario
+graf_hist(sector_2_$SALARIO, res_sal, "Histograma del salario", "Salario (miles de pesos)")
+graf_ojiva(res_sal, "Ojiva del salario", "Salario (miles de pesos)")
+```
+
+### SATISFACCION laboral
+
+```{r}
+#| label: tabla-satisfaccion
+#| results: asis
+res_sat <- tabla_cont(sector_2_$SATISFACCION, dec = 2)
+info_cont(res_sat)
+```
+
+```{r}
+#| label: tabla-satisfaccion2
+mostrar_cont(res_sat)
+```
+
+```{r}
+#| label: graf-satisfaccion
+graf_hist(sector_2_$SATISFACCION, res_sat, "Histograma de la satisfacción laboral", "Satisfacción (0,5 a 2,5)")
+```
+
+### PARTICIPACION en programas
+
+```{r}
+#| label: tabla-participacion
+#| results: asis
+res_par <- tabla_cont(sector_2_$PARTICIPACION, dec = 3)
+info_cont(res_par)
+```
+
+```{r}
+#| label: tabla-participacion2
+mostrar_cont(res_par)
+```
+
+```{r}
+#| label: graf-participacion
+graf_hist(sector_2_$PARTICIPACION, res_par, "Histograma de la participación", "Participación (proporción)")
+```
+
+## Dataset adicional: atención al ciudadano
+
+Para practicar con más tablas se usa un segundo archivo, `atencion_ciudadano.xlsx` (150 registros **simulados** con fines académicos). Debe guardarse en la carpeta `DATOS`.
+
+```{r}
+#| label: leer-ciudadano
+ciudadano <- read_excel(buscar_excel("atencion_ciudadano.*\\.xlsx$"), sheet = "Datos")
+
+ciudadano$NIVEL_EDUCATIVO <- factor(ciudadano$NIVEL_EDUCATIVO,
+  levels = c("Primaria", "Secundaria", "Técnico", "Profesional", "Posgrado"),
+  ordered = TRUE)
+
+ciudadano$CALIFICACION <- factor(ciudadano$CALIFICACION,
+  levels = c("Pésima", "Mala", "Regular", "Buena", "Excelente"),
+  ordered = TRUE)
+
+head(ciudadano)
+```
+
+### CANAL (nominal)
+
+```{r}
+#| label: ciu-canal
+mostrar(tabla_frec(ciudadano$CANAL, acumular = FALSE), primera = "Canal de atención")
+```
+
+```{r}
+#| label: ciu-canal-graf
+graf_circular(ciudadano$CANAL, "Canal de atención")
+```
+
+### NIVEL_EDUCATIVO (ordinal)
+
+```{r}
+#| label: ciu-edu
+mostrar(tabla_frec(ciudadano$NIVEL_EDUCATIVO), primera = "Nivel educativo")
+```
+
+### CALIFICACION (ordinal)
+
+```{r}
+#| label: ciu-calif
+mostrar(tabla_frec(ciudadano$CALIFICACION), primera = "Calificación del servicio")
+```
+
+```{r}
+#| label: ciu-calif-graf
+graf_barras(ciudadano$CALIFICACION, "Calificación del servicio", "Calificación")
+```
+
+### TRAMITES (discreta)
+
+```{r}
+#| label: ciu-tramites
+mostrar(tabla_frec(ciudadano$TRAMITES), primera = "Trámites (xi)")
+```
+
+### TIEMPO_ESPERA (continua, minutos)
+
+```{r}
+#| label: ciu-espera
+#| results: asis
+res_esp <- tabla_cont(ciudadano$TIEMPO_ESPERA, dec = 1)
+info_cont(res_esp)
+```
+
+```{r}
+#| label: ciu-espera2
+mostrar_cont(res_esp)
+```
+
+```{r}
+#| label: ciu-espera-graf
+graf_hist(ciudadano$TIEMPO_ESPERA, res_esp, "Tiempo de espera", "Minutos")
+graf_ojiva(res_esp, "Ojiva del tiempo de espera", "Minutos")
+```
+
+### INGRESO_MENSUAL (continua, miles de pesos)
+
+```{r}
+#| label: ciu-ingreso
+#| results: asis
+res_ing <- tabla_cont(ciudadano$INGRESO_MENSUAL, dec = 0)
+info_cont(res_ing)
+```
+
+```{r}
+#| label: ciu-ingreso2
+mostrar_cont(res_ing)
+```
+
+# Referencias
+
+- Martínez Bencardino, C. *Estadística y muestreo*. Ecoe Ediciones.
+- Diccionario de variables de la encuesta de administración pública (documento de la actividad).
